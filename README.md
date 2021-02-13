@@ -1,2 +1,0 @@
-# GLSugar
-OpenGL Sugar
