@@ -1,10 +1,6 @@
 #ifndef VIRTUOSO_TEXTURE_LOADER_H_INCLUDED
 #define VIRTUOSO_TEXTURE_LOADER_H_INCLUDED
 
-#if !defined(GL_HPP)
-#error "Missing dependency : include opengl.hpp before including TextureLoader.h"
-#endif
-
 #ifdef __ANDROID_API__
 #include <android/asset_manager.h>
 #endif
@@ -153,7 +149,7 @@ namespace glSugar
 
 	inline gl::Texture allocateTexture(unsigned int width, unsigned int height, GLenum format,
 									   unsigned int levels) {
-		gl::Texture rval;
+		gl::Texture rval(GL_TEXTURE_2D);
 
 		if (!levels) levels = maxMipmapLevelsForTexture(width, height);
 
@@ -164,13 +160,13 @@ namespace glSugar
 
 	inline gl::Texture allocateCubeTexture(unsigned int width, unsigned int height,
 										   GLenum format, unsigned int levels) {
-		gl::Texture rval;
+		gl::Texture rval(GL_TEXTURE_CUBE_MAP);
 
 		if (!levels) levels = maxMipmapLevelsForTexture(width, height);
 
 		///texturestorage doesn't take a target so DSA will fail if we don't bind the texture to the correct target first
 		rval.Bind(GL_TEXTURE_CUBE_MAP);
-		rval.Storage2D(GL_TEXTURE_CUBE_MAP, levels, format, width, height);
+		rval.Storage2D(levels, format, width, height);
 
 		return rval;
 	}
@@ -180,7 +176,7 @@ namespace glSugar
 
 		if (!levels) levels = maxMipmapLevelsForTexture(data.width, data.height);
 
-		gl::Texture rval;
+		gl::Texture rval(GL_TEXTURE_2D);
 
 		rval.Storage2D(levels, format, data.width, data.height);
 
@@ -191,7 +187,7 @@ namespace glSugar
 
 	inline gl::Texture allocateCubeTexture(TextureInputData *faces, GLenum format,
 										   unsigned int levels) {
-		gl::Texture rval;
+		gl::Texture rval(GL_TEXTURE_CUBE_MAP);
 
 		if (!levels) levels = maxMipmapLevelsForTexture(faces[0].width, faces[0].height);
 
@@ -199,7 +195,7 @@ namespace glSugar
 		///\todo this comment is not accurate, test once we have the cube test back
 		rval.Bind(GL_TEXTURE_CUBE_MAP);
 
-		rval.Storage2D(GL_TEXTURE_CUBE_MAP, levels, format, faces[0].width, faces[0].height);
+		rval.Storage2D(levels, format, faces[0].width, faces[0].height);
 
 		fillCubeTextureWithFaceData(rval, faces, 0);
 
@@ -281,7 +277,19 @@ namespace glSugar
 		{
 			images[i].useUnpackAlignment();
 
-			tex.SubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, level, 0, 0, images[i].width, images[i].height, images[i].format, images[i].type, images[i].pixels);
+			/*
+			#define GL_TEXTURE_BINDING_CUBE_MAP 0x8514
+			#define GL_TEXTURE_CUBE_MAP_POSITIVE_X 0x8515
+			#define GL_TEXTURE_CUBE_MAP_NEGATIVE_X 0x8516
+			#define GL_TEXTURE_CUBE_MAP_POSITIVE_Y 0x8517
+			#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Y 0x8518
+			#define GL_TEXTURE_CUBE_MAP_POSITIVE_Z 0x8519
+			#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Z 0x851A
+			*/
+
+			tex.SubImage3D(level, 0, 0, i, images[i].width, images[i].height, 1, images[i].format, images[i].type, images[i].pixels);
+
+			//tex.SubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, level, 0, 0, images[i].width, images[i].height, images[i].format, images[i].type, images[i].pixels);
 
 			if (images[i].width != images[0].width || images[i].height != images[0].height)
 			{

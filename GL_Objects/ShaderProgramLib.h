@@ -8,18 +8,16 @@
 #ifndef _GL_SHADER_H_INCLUDED
 #define _GL_SHADER_H_INCLUDED
 
-#if !defined(GL_HPP)
-#error "Missing dependency : include opengl.hpp before including ShaderProgramLib.h"
-#endif
-
 #include <iostream>
 
-namespace glSugar
+namespace Virtuoso
 {
-	gl::Shader Shader(GLenum shaderType, const std::string& src);
-	gl::Program Program(std::initializer_list<gl::Shader> shaders);
+    namespace GL
+    {
+        gl::Shader Shader(GLenum shaderType, const std::string& src);
+        gl::Program Program(std::initializer_list<gl::Shader> shaders);
+    }
 }
-
 #endif
 
 #ifdef VIRTUOSO_SHADERPROGRAMLIB_IMPLEMENTATION
@@ -27,62 +25,85 @@ namespace glSugar
 #include <fstream>
 #include <stdexcept>
 
-namespace glSugar
+namespace Virtuoso
 {
-	gl::Shader Shader(GLenum shaderType, const std::string& src)
-	{
-		static std::hash<std::string> hash_fn;
+    namespace GL
+    {
+        gl::Shader Shader(GLenum shaderType, const std::string& src)
+        {
+            static std::hash<std::string> hash_fn;
 
 #ifdef VIRTUOSO_LOG_SHADERS
-		std::clog<<"Shader SRC : "<< src << std::endl;
+            std::clog<<"Shader SRC : "<< src << std::endl;
 
 #else
-		std::clog<< "\n\nShader with hash : " << hash_fn(src) << std::endl;
+            std::clog<< "\n\nShader with hash : " << hash_fn(src) << std::endl;
 #endif
-		gl::Shader rval(shaderType);
+            gl::Shader rval(shaderType);
 
-		try
-		{
-			rval.Source(src);
-			std::string compileLog = rval.Compile();
+            try
+            {
+                rval.Source(src);
 
-			if (compileLog.length())
-			{
-				std::clog<<"\nShader Compile Log : \nStage : "<< (int)shaderType<<"\n" << compileLog << std::endl;
-			}
-		}
-		catch (std::runtime_error& ex)
-		{
-			std::clog << ex.what() << std::endl;
-			///throw ex;
-		}
+                rval.Compile();
 
-		return rval;
-	}
+                std::string compileLog = rval.GetInfoLog();
 
-	gl::Program Program(std::initializer_list<gl::Shader> shaders)
-	{
-		gl::Program rval;
+                if (rval.Get(GL_COMPILE_STATUS) == GL_FALSE)
+                {
+                    switch (shaderType)
+                    {
+                    case GL_VERTEX_SHADER:
+                        std::clog << "Vertex "; break;
+                    case GL_FRAGMENT_SHADER:
+                        std::clog << "Fragment "; break;
+                    case GL_GEOMETRY_SHADER:
+                        std::clog << "Geometry "; break;
+                    case GL_COMPUTE_SHADER:
+                        std::clog << "Compute "; break;
+                    }
+                    std::clog << "Shader compilation failed!" << std::endl;
+                }
 
-		for (const gl::Shader& sh: shaders)
-		{
-			rval.Attach(sh);
-		}
+                if (compileLog.length())
+                {
+                    std::clog<<"\nShader Compile Log : \nStage : "<< (int)shaderType<<"\n" << compileLog << std::endl;
+                }
+            }
+            catch (std::runtime_error& ex)
+            {
+                std::clog << ex.what() << std::endl;
+                ///throw ex;
+            }
 
-		///try
-		{
-		std::string linkLog = rval.Link();
+            return rval;
+        }
 
+        gl::Program Program(std::initializer_list<gl::Shader> shaders)
+        {
+            gl::Program rval;
 
-		if (linkLog.length())
-		{
-		   std::clog << " Program Link Log: \n" << linkLog << "\n\n";
-		}
-		}
-		///catch (...){}
+            for (const gl::Shader& sh: shaders)
+            {
+                rval.AttachShader(sh);
+            }
 
-		return rval;
-	}
+            ///try
+            {
+             rval.Link();
+
+             std::string linkLog = rval.GetInfoLog();
+
+            if (linkLog.length())
+            {
+               std::clog << " Program Link Log: \n" << linkLog << "\n\n";
+            }
+            }
+            ///catch (...){}
+
+            return rval;
+        }
+    }
 }
 
 #endif
