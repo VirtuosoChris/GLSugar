@@ -14,9 +14,10 @@
 #define ImguiRender_h
 
 #include <imgui.h>
-#include "GL_Objects/ShaderProgramLib.h"
-#include "GL_Objects/TextureLoader.h"
+#include "GL_Objects/ShaderProgram.h"
+#include "GL_Objects/Texture.h"
 #include <array>
+#include <string_view>
 
 struct ImguiRenderState
 {
@@ -26,14 +27,14 @@ struct ImguiRenderState
     gl::Texture fontTex;
     gl::VertexArray fontVAO;
     
-    const static std::string DEFAULT_API_VERSION;
-    
-    ImguiRenderState(const std::string& apiVersion = DEFAULT_API_VERSION);
+    static inline constexpr std::string_view DEFAULT_API_VERSION = "#version 410 core\n";
+
+    ImguiRenderState(const std::string_view& apiVersion = DEFAULT_API_VERSION);
     
     void renderGUI(ImDrawData* data);
 };
 
-const std::string imguiVert =
+inline constexpr std::string_view imguiVert =
 
 R"STRING(
 
@@ -62,7 +63,7 @@ void main()
 )STRING";
 
 
-const std::string imguiFrag =
+inline constexpr const std::string_view imguiFrag =
 R"STRING(
 
 precision highp float;
@@ -84,8 +85,6 @@ void main(void)
 
 
 #ifdef ImguiRender_h_IMPLEMENTATION
-
-const std::string ImguiRenderState::DEFAULT_API_VERSION = "#version 410 core\n";
 
 void ImguiRenderState::renderGUI(ImDrawData* data)
 {
@@ -162,11 +161,11 @@ void ImguiRenderState::renderGUI(ImDrawData* data)
     glScissor(scissorBoxOld[0], scissorBoxOld[1], scissorBoxOld[2], scissorBoxOld[3]);
 }
 
-ImguiRenderState::ImguiRenderState(const std::string& apiVersion)
+ImguiRenderState::ImguiRenderState(const std::string_view& apiVersion)
     : imguiProg(
         Virtuoso::GL::Program(
-            { Virtuoso::GL::Shader(GL_VERTEX_SHADER, apiVersion + imguiVert),
-            Virtuoso::GL::Shader(GL_FRAGMENT_SHADER, apiVersion + imguiFrag) }
+            { Virtuoso::GL::Shader(GL_VERTEX_SHADER, std::string(apiVersion).append(imguiVert)),
+            Virtuoso::GL::Shader(GL_FRAGMENT_SHADER, std::string(apiVersion).append(imguiFrag)) }
         )),
     fontTex(GL_TEXTURE_2D)
 {

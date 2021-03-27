@@ -9,6 +9,7 @@
 #define _GL_SHADER_H_INCLUDED
 
 #include <iostream>
+#include <glhpp/OpenGL.hpp>
 
 namespace Virtuoso
 {

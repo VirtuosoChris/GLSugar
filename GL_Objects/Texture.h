@@ -9,6 +9,10 @@
 struct android_app;
 #endif
 
+#include <glhpp/OpenGL.hpp>
+#include <functional>
+#include <assert.h>
+
 namespace glSugar
 {
 	/// Client side input data used to initialize a GL texture
