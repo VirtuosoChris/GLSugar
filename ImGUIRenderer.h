@@ -162,11 +162,8 @@ void ImguiRenderState::renderGUI(ImDrawData* data)
 }
 
 ImguiRenderState::ImguiRenderState(const std::string_view& apiVersion)
-    : imguiProg(
-        glSugar::Program(
-            { glSugar::Shader(GL_VERTEX_SHADER, std::string(apiVersion).append(imguiVert)),
-            glSugar::Shader(GL_FRAGMENT_SHADER, std::string(apiVersion).append(imguiFrag)) }
-        )),
+    :
+    imguiProg(glSugar::VertFragProgram(std::string(apiVersion).append(imguiVert), std::string(apiVersion).append(imguiFrag))),
     fontTex(GL_TEXTURE_2D)
 {
     ImGuiIO& io = ImGui::GetIO();
