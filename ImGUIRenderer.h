@@ -163,9 +163,9 @@ void ImguiRenderState::renderGUI(ImDrawData* data)
 
 ImguiRenderState::ImguiRenderState(const std::string_view& apiVersion)
     : imguiProg(
-        Virtuoso::GL::Program(
-            { Virtuoso::GL::Shader(GL_VERTEX_SHADER, std::string(apiVersion).append(imguiVert)),
-            Virtuoso::GL::Shader(GL_FRAGMENT_SHADER, std::string(apiVersion).append(imguiFrag)) }
+        glSugar::Program(
+            { glSugar::Shader(GL_VERTEX_SHADER, std::string(apiVersion).append(imguiVert)),
+            glSugar::Shader(GL_FRAGMENT_SHADER, std::string(apiVersion).append(imguiFrag)) }
         )),
     fontTex(GL_TEXTURE_2D)
 {

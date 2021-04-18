@@ -11,13 +11,11 @@
 #include <iostream>
 #include <glhpp/OpenGL.hpp>
 
-namespace Virtuoso
+namespace glSugar
 {
-    namespace GL
-    {
-        gl::Shader Shader(GLenum shaderType, const std::string& src);
-        gl::Program Program(std::initializer_list<gl::Shader> shaders);
-    }
+    gl::Shader Shader(GLenum shaderType, const std::string& src);
+    gl::Program Program(std::initializer_list<gl::Shader> shaders);
+    gl::Program VertFragProgram(const std::string_view& vertSrc, const std::string_view& fragSrc);
 }
 #endif
 
@@ -26,84 +24,86 @@ namespace Virtuoso
 #include <fstream>
 #include <stdexcept>
 
-namespace Virtuoso
+namespace glSugar
 {
-    namespace GL
+    gl::Shader Shader(GLenum shaderType, const std::string& src)
     {
-        gl::Shader Shader(GLenum shaderType, const std::string& src)
-        {
-            static std::hash<std::string> hash_fn;
+        static std::hash<std::string> hash_fn;
 
 #ifdef VIRTUOSO_LOG_SHADERS
-            std::clog<<"Shader SRC : "<< src << std::endl;
+        std::clog<<"Shader SRC : "<< src << std::endl;
 
 #else
-            std::clog<< "\n\nShader with hash : " << hash_fn(src) << std::endl;
+        std::clog<< "\n\nShader with hash : " << hash_fn(src) << std::endl;
 #endif
-            gl::Shader rval(shaderType);
+        gl::Shader rval(shaderType);
 
-            try
-            {
-                rval.Source(src);
-
-                rval.Compile();
-
-                std::string compileLog = rval.GetInfoLog();
-
-                if (rval.Get(GL_COMPILE_STATUS) == GL_FALSE)
-                {
-                    switch (shaderType)
-                    {
-                    case GL_VERTEX_SHADER:
-                        std::clog << "Vertex "; break;
-                    case GL_FRAGMENT_SHADER:
-                        std::clog << "Fragment "; break;
-                    case GL_GEOMETRY_SHADER:
-                        std::clog << "Geometry "; break;
-                    case GL_COMPUTE_SHADER:
-                        std::clog << "Compute "; break;
-                    }
-                    std::clog << "Shader compilation failed!" << std::endl;
-                }
-
-                if (compileLog.length())
-                {
-                    std::clog<<"\nShader Compile Log : \nStage : "<< (int)shaderType<<"\n" << compileLog << std::endl;
-                }
-            }
-            catch (std::runtime_error& ex)
-            {
-                std::clog << ex.what() << std::endl;
-                ///throw ex;
-            }
-
-            return rval;
-        }
-
-        gl::Program Program(std::initializer_list<gl::Shader> shaders)
+        try
         {
-            gl::Program rval;
+            rval.Source(src);
 
-            for (const gl::Shader& sh: shaders)
+            rval.Compile();
+
+            std::string compileLog = rval.GetInfoLog();
+
+            if (rval.Get(GL_COMPILE_STATUS) == GL_FALSE)
             {
-                rval.AttachShader(sh);
+                switch (shaderType)
+                {
+                case GL_VERTEX_SHADER:
+                    std::clog << "Vertex "; break;
+                case GL_FRAGMENT_SHADER:
+                    std::clog << "Fragment "; break;
+                case GL_GEOMETRY_SHADER:
+                    std::clog << "Geometry "; break;
+                case GL_COMPUTE_SHADER:
+                    std::clog << "Compute "; break;
+                }
+                std::clog << "Shader compilation failed!" << std::endl;
             }
 
-            ///try
+            if (compileLog.length())
             {
-             rval.Link();
-
-             std::string linkLog = rval.GetInfoLog();
-
-            if (linkLog.length())
-            {
-               std::clog << " Program Link Log: \n" << linkLog << "\n\n";
+                std::clog<<"\nShader Compile Log : \nStage : "<< (int)shaderType<<"\n" << compileLog << std::endl;
             }
-            }
-            ///catch (...){}
-
-            return rval;
         }
+        catch (std::runtime_error& ex)
+        {
+            std::clog << ex.what() << std::endl;
+            ///throw ex;
+        }
+
+        return rval;
+    }
+
+    gl::Program Program(std::initializer_list<gl::Shader> shaders)
+    {
+        gl::Program rval;
+
+        for (const gl::Shader& sh: shaders)
+        {
+            rval.AttachShader(sh);
+        }
+
+        ///try
+        {
+            rval.Link();
+
+            std::string linkLog = rval.GetInfoLog();
+
+        if (linkLog.length())
+        {
+            std::clog << " Program Link Log: \n" << linkLog << "\n\n";
+        }
+        }
+        ///catch (...){}
+
+        return rval;
+    }
+
+    gl::Program VertFragProgram(const std::string_view& vertSrc, const std::string_view& fragSrc)
+    {
+        return Program({ Shader(GL_VERTEX_SHADER, vertSrc.data()), Shader(GL_FRAGMENT_SHADER, fragSrc.data()) });
     }
 }
 
