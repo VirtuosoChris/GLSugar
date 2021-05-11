@@ -123,10 +123,10 @@ void populateAttrib(gl::VertexArray& vao, int bindingIndex, int& attribIndex)
     attribIndex++;
 }
 
-#define ATTR(y) glSugar::populateAttrib<decltype(y), offsetof(VertexFormat, y)>(vao, bindingIndex, attribIndex);
+#define ATTRIB(y) glSugar::populateAttrib<decltype(y), offsetof(VertexFormat, y)>(vao, bindingIndex, attribIndex);
 
 
-#define VBO_LAYOUT(x) struct x : public glSugar::VBOFormat < x >
+#define VERTEX_LAYOUT(x) struct x : public glSugar::VBOFormat < x >
 #define VAO_INIT static void initVAO(gl::VertexArray & vao, int bindingIndex, int& attribIndex)
 
 template <typename T, typename ...Args>
@@ -152,7 +152,6 @@ struct nth_element_impl<0, T, Ts...> {
 
 template <std::size_t I, typename ...Ts>
 using nth_element = typename nth_element_impl<I, Ts...>::type;
-
 
 template <class... types>
 class Vao
