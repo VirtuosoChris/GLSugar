@@ -29,9 +29,13 @@ namespace glSugar
         template <typename T, std::size_t length, GLenum Normalized = GL_FALSE>
         struct AttribVec : public std::array<T, length>
         {
+            typedef std::array<T, length> ArrayType;
             constexpr static GLenum typeEnum = GLEnumType<T>::enumType;
             constexpr static GLenum normalized = Normalized;
             constexpr static GLint  size = length;
+
+            using ArrayType::ArrayType;
+            using ArrayType::operator=;
         };
 
 
@@ -176,7 +180,7 @@ public:
         vao.ElementBuffer(indexBuffer);
     }
 
-    template <int BINDING_INDEX>
+    template <int BINDING_INDEX=0>
     void vertexBuffer(gl::Buffer& buffer, int offset = 0)
     {
         int stride = sizeof(nth_element<BINDING_INDEX, types...>);
