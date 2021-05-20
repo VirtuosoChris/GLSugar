@@ -36,6 +36,11 @@ namespace glSugar
 
             using ArrayType::ArrayType;
             using ArrayType::operator=;
+
+            //AttribVec() {}
+
+            //template <typename B>
+            //AttribVec(const std::initializer_list<B>& l) : ArrayType(l) {}
         };
 
 
@@ -111,13 +116,6 @@ namespace glSugar
         typedef AttribVec<GLint, 4, GL_TRUE> Int4n;
     }
 
-
-template <typename T>
-struct VBOFormat
-{
-    using VertexFormat = T;
-};
-
 template <typename AttribType, int offset>
 void populateAttrib(gl::VertexArray& vao, int bindingIndex, int& attribIndex)
 {
@@ -128,10 +126,7 @@ void populateAttrib(gl::VertexArray& vao, int bindingIndex, int& attribIndex)
 }
 
 #define ATTRIB(y) glSugar::populateAttrib<decltype(y), offsetof(VertexFormat, y)>(vao, bindingIndex, attribIndex);
-
-
-#define VERTEX_LAYOUT(x) struct x : public glSugar::VBOFormat < x >
-#define VAO_INIT static void initVAO(gl::VertexArray & vao, int bindingIndex, int& attribIndex)
+#define VAO_INIT(x) using VertexFormat = x; static void initVAO(gl::VertexArray & vao, int bindingIndex, int& attribIndex)
 
 template <typename T, typename ...Args>
 void initVAO(gl::VertexArray& vao, int bindingIndex, int& attribIndex)

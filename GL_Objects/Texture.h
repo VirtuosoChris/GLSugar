@@ -106,37 +106,44 @@ namespace glSugar
 
     /*** INLINE IMPLEMENTATIONS ***/
 
-    inline void setRepeatModeUV(gl::Texture &tex, GLenum mode) {
-        tex.Parameter(GL_TEXTURE_WRAP_S, (GLint) mode);///\todo that's really annoying
+    inline void setRepeatModeUV(gl::Texture &tex, GLenum mode)
+    {
+        tex.Parameter(GL_TEXTURE_WRAP_S, (GLint) mode);
         tex.Parameter(GL_TEXTURE_WRAP_T, (GLint) mode);
     }
 
-    inline void setFilterNearest(gl::Texture & tex) {
+    inline void setFilterNearest(gl::Texture & tex) 
+    {
         tex.Parameter(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         tex.Parameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     }
 
-    inline void setFilterNearestMip(gl::Texture & tex) {
+    inline void setFilterNearestMip(gl::Texture & tex)
+    {
         tex.Parameter(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         tex.Parameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
     }
 
-    inline void setFilterBilinear(gl::Texture & tex) {
+    inline void setFilterBilinear(gl::Texture & tex)
+    {
         tex.Parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         tex.Parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     }
 
-    inline void setFilterBilinearMip(gl::Texture & tex) {
+    inline void setFilterBilinearMip(gl::Texture & tex)
+    {
         tex.Parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         tex.Parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
     }
 
-    inline void setFilterTrilinear(gl::Texture & tex) {
+    inline void setFilterTrilinear(gl::Texture & tex)
+    {
         tex.Parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         tex.Parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     }
 
-    inline unsigned int maxMipmapLevelsForTexture(unsigned int width, unsigned int height) {
+    inline unsigned int maxMipmapLevelsForTexture(unsigned int width, unsigned int height)
+    {
         unsigned int largestDim = std::max < unsigned
         int > (width, height);
 
@@ -176,7 +183,8 @@ namespace glSugar
     }
 
     inline gl::Texture allocateTexture(const TextureInputData &data, GLenum format,
-                                       unsigned int levels) {
+                                       unsigned int levels)
+    {
 
         if (!levels) levels = maxMipmapLevelsForTexture(data.width, data.height);
 
@@ -189,8 +197,8 @@ namespace glSugar
         return rval;
     }
 
-    inline gl::Texture allocateCubeTexture(TextureInputData *faces, GLenum format,
-                                           unsigned int levels) {
+    inline gl::Texture allocateCubeTexture(TextureInputData *faces, GLenum format, unsigned int levels)
+    {
         gl::Texture rval(GL_TEXTURE_CUBE_MAP);
 
         if (!levels) levels = maxMipmapLevelsForTexture(faces[0].width, faces[0].height);
