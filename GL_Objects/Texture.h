@@ -81,6 +81,7 @@ namespace glSugar
     inline gl::Texture allocateCubeTexture(TextureInputData *faces, GLenum format,
                                            unsigned int levels = 0);
 
+    inline gl::Texture allocateShadowTexture(GLint shadowWidth, GLint shadowHeight, GLenum shadowFormat = GL_DEPTH_COMPONENT32, GLint levels = 1);
 
     /// takes array of texture input data in {+-X,+-Y,+-Z} order for the faces and populates input texture tex at "level"
     void fillCubeTextureWithFaceData(gl::Texture &tex, const TextureInputData *images,
@@ -214,6 +215,19 @@ namespace glSugar
         return rval;
     }
 
+    inline gl::Texture allocateShadowTexture(GLint shadowWidth, GLint shadowHeight, GLenum shadowFormat, GLint levels)
+    {
+        gl::Texture shadowmap = glSugar::allocateTexture(shadowWidth, shadowHeight, shadowFormat, levels);
+
+        shadowmap.Parameter(GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+        shadowmap.Parameter(GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+        glSugar::setFilterBilinear(shadowmap);
+        glSugar::setRepeatModeUV(shadowmap, GL_CLAMP_TO_BORDER);
+        float borderColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        shadowmap.Parameter(GL_TEXTURE_BORDER_COLOR, borderColor);
+
+        return shadowmap;
+    }
 
     /// fills a previously allocated texture level.
     ///\todo should make this an interface function to a fillTextureSubdataFromFile, eg, if we fill in a tile atlas
