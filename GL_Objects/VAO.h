@@ -165,6 +165,8 @@ public:
         initVAO<types...>(vao, bindingIndex, attribIndex);
     }
 
+    gl::VertexArray& Get() { return vao; }
+
     void bind()
     {
         vao.Bind();
