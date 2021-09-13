@@ -19,14 +19,96 @@
 #include <array>
 #include <string_view>
 
+
+struct ImguiFontManager
+{
+protected:
+
+    gl::Texture fontTex;
+    bool dirty;
+
+    std::unordered_map<std::string, ImFont*> fontMappings;
+
+    static const unsigned int DefaultFontSizePixels = 16;
+
+public:
+
+    static ImFontConfig defaultFontConfig()
+    {
+        ImFontConfig config;
+        config.OversampleH = 4;
+        config.OversampleV = 4;
+        /*config.GlyphExtraSpacing.x = 1.0f;
+        */
+
+        return config;
+    }
+
+    ImFont* addTTFFont(const std::string& filename, unsigned int sizePixels = DefaultFontSizePixels)
+    {
+        return addTTFFont(filename, defaultFontConfig(), sizePixels);
+    }
+
+    ImFont* addTTFFont(const std::string& filename, const ImFontConfig& fontConfig, unsigned int sizePixels = DefaultFontSizePixels)
+    {
+        ImGuiIO& io = ImGui::GetIO();
+        ImFont* font1 = io.Fonts->AddFontFromFileTTF(filename.c_str(), sizePixels, &fontConfig);
+        return font1;
+    }
+
+    ImguiFontManager() : fontTex(GL_TEXTURE_2D), dirty(true)
+    {
+        gl::Texture atlas = generateFontAtlas();
+        fontTex = std::move(atlas);
+    }
+
+    gl::Texture generateFontAtlas() const
+    {
+        ImGuiIO& io = ImGui::GetIO();
+
+        /*** render font atlas ***/
+        unsigned char* pixels = nullptr;
+        int width=0, height=0;
+
+        io.Fonts->GetTexDataAsAlpha8(&pixels, &width, &height);
+
+        gl::Texture rval = glSugar::allocateTexture(width, height, GL_R8);
+
+        rval.SubImage2D(0, 0, 0, width, height, GL_RED, GL_UNSIGNED_BYTE, pixels);
+
+        rval.Bind(GL_TEXTURE_2D);
+
+        rval.GenerateMipmap();
+
+        glSugar::setFilterBilinear(rval);
+
+        return rval;
+    }
+
+    const gl::Texture& fontTexture()
+    {
+        if (dirty)
+        {
+            gl::Texture atlas = generateFontAtlas();
+            fontTex = std::move(atlas);
+            dirty = false;
+        }
+
+        assert(fontTex.Is());
+        return fontTex;
+    }
+};
+
+
 struct ImguiRenderState
 {
     gl::Program imguiProg;
     gl::Buffer vertexBuffer;
     gl::Buffer indexBuffer;
-    gl::Texture fontTex;
     gl::VertexArray fontVAO;
-    
+
+    ImguiFontManager fontManager;
+
     static inline constexpr std::string_view DEFAULT_API_VERSION = "#version 410 core\n";
 
     ImguiRenderState(const std::string_view& apiVersion = DEFAULT_API_VERSION);
@@ -91,7 +173,6 @@ void ImguiRenderState::renderGUI(ImDrawData* data)
     assert(imguiProg.Is());
     assert(vertexBuffer.Is());
     assert(indexBuffer.Is());
-    assert(fontTex.Is());
     assert(fontVAO.Is());
 
 
@@ -107,8 +188,12 @@ void ImguiRenderState::renderGUI(ImDrawData* data)
 
     fontVAO.Bind();
 
+    const gl::Texture& fontTex = fontManager.fontTexture();
+
     glActiveTexture(GL_TEXTURE0);
     fontTex.Bind(GL_TEXTURE_2D);
+
+    GLuint boundTex = fontTex.name();
 
     bool scissorEnabled = glIsEnabled(GL_SCISSOR_TEST);
 
@@ -135,7 +220,17 @@ void ImguiRenderState::renderGUI(ImDrawData* data)
           ImDrawCmd& cmd = drawList.CmdBuffer[cmds];
 
           ImDrawCmd* pcmd = &cmd;
-          
+
+          GLuint tex = (int)(pcmd->TextureId);
+          tex = (tex == 0) ? fontTex.name() : tex;
+
+          // prevent spamming texture state changes
+          if (tex != boundTex)
+          {
+              glBindTexture(GL_TEXTURE_2D, tex);
+              boundTex = tex;
+          }
+
           ImVec4 clip_rect;
           clip_rect.x = (pcmd->ClipRect.x - clip_off.x) * clip_scale.x;
           clip_rect.y = (pcmd->ClipRect.y - clip_off.y) * clip_scale.y;
@@ -163,25 +258,8 @@ void ImguiRenderState::renderGUI(ImDrawData* data)
 
 ImguiRenderState::ImguiRenderState(const std::string_view& apiVersion)
     :
-    imguiProg(glSugar::VertFragProgram(std::string(apiVersion).append(imguiVert), std::string(apiVersion).append(imguiFrag))),
-    fontTex(GL_TEXTURE_2D)
+    imguiProg(glSugar::VertFragProgram(std::string(apiVersion).append(imguiVert), std::string(apiVersion).append(imguiFrag)))
 {
-    ImGuiIO& io = ImGui::GetIO();
-    
-    /*** render font atlas ***/
-    unsigned char* pixels;
-    int width, height;
-    
-    io.Fonts->GetTexDataAsAlpha8(&pixels, &width, &height);
-    
-    fontTex = glSugar::allocateTexture(width, height, GL_R8);
-    fontTex.SubImage2D(0, 0, 0, width, height, GL_RED, GL_UNSIGNED_BYTE, pixels);
-
-    fontTex.Bind(GL_TEXTURE_2D);
-    fontTex.GenerateMipmap();
-    
-    glSugar::setFilterTrilinear(fontTex);
-
     std::clog << "ImDrawVert : size : " << sizeof(ImDrawVert) << std::endl;
 
     // enable the attribs
