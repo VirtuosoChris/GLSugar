@@ -221,7 +221,7 @@ void ImguiRenderState::renderGUI(ImDrawData* data)
 
           ImDrawCmd* pcmd = &cmd;
 
-          GLuint tex = (int)(pcmd->TextureId);
+          GLuint tex = (GLuint)(intptr_t)(pcmd->TextureId);
           tex = (tex == 0) ? fontTex.name() : tex;
 
           // prevent spamming texture state changes
