@@ -292,6 +292,10 @@ ImguiRenderState::ImguiRenderState(const std::string_view& apiVersion)
     imguiProg.Uniform("tex", 0);
     
     imguiProg.UniformMatrix4("mvp", 1, false, id.data());
+
+    glObjectLabel(GL_BUFFER, indexBuffer.name(), -1, "ImGUI index buffer");
+    glObjectLabel(GL_BUFFER, vertexBuffer.name(), -1, "ImGui vertex buffer");
+    glObjectLabel(GL_VERTEX_ARRAY, fontVAO.name(), -1, "ImGui VAO");
 }
 
 
