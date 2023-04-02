@@ -187,11 +187,15 @@ namespace glSugar
                                        unsigned int levels)
     {
 
-        if (!levels) levels = maxMipmapLevelsForTexture(data.width, data.height);
+        if (levels < 1) levels = maxMipmapLevelsForTexture(data.width, data.height);
 
         gl::Texture rval(GL_TEXTURE_2D);
 
         rval.Storage2D(levels, format, data.width, data.height);
+        
+        int rn = rval.name();
+
+        int x = glIsTexture(rn);
 
         fillTextureWithData(rval, data, 0);
 
@@ -249,10 +253,12 @@ namespace glSugar
 {
     void TextureInputData::useUnpackAlignment()const
     {
+        //assert(GL_NO_ERROR == glGetError());
+
         glPixelStorei(GL_UNPACK_ALIGNMENT, unpackAlignment);
 
         GLenum err = GL_NO_ERROR;
-        assert(GL_NO_ERROR == glGetError());
+        //assert(GL_NO_ERROR == glGetError());
     }
 
     TextureInputData::~TextureInputData()

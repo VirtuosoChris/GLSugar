@@ -1,4 +1,4 @@
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 #if defined(STB_BUILD)
 #define STB_IMAGE_IMPLEMENTATION
