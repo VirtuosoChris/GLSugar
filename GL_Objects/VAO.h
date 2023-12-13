@@ -48,6 +48,17 @@ namespace glSugar
         struct AttribVec <T,1,Normalized>
         {
             T value;
+
+            typedef T ArrayType;
+            constexpr static GLenum typeEnum = GLEnumType<T>::enumType;
+            constexpr static GLenum normalized = Normalized;
+            constexpr static GLint  size = 1;
+
+            AttribVec() : value(0) {}
+
+            AttribVec(const T& in) : value(in) {}
+
+            AttribVec& operator=(const T& in) { value = in; return *this; }
         };
 
 
@@ -125,7 +136,23 @@ void populateAttrib(gl::VertexArray& vao, int bindingIndex, int& attribIndex)
     attribIndex++;
 }
 
+/// -- https://www.khronos.org/opengl/wiki/Vertex_Specification --
+///\todo add one for double, compile time error checking for compatible types?
+template <typename AttribType, int offset>
+void populateAttribI(gl::VertexArray& vao, int bindingIndex, int& attribIndex)
+{
+    vao.EnableAttrib(attribIndex);
+    vao.AttribIFormat(attribIndex, AttribType::size, AttribType::typeEnum, offset);
+    vao.AttribBinding(attribIndex, bindingIndex);
+    attribIndex++;
+}
+
 #define ATTRIB(y) glSugar::populateAttrib<decltype(y), offsetof(VertexFormat, y)>(vao, bindingIndex, attribIndex);
+
+#define ATTRIB_I(y) glSugar::populateAttribI<decltype(y), offsetof(VertexFormat, y)>(vao, bindingIndex, attribIndex);
+
+//#define INSTANCE_ATTRIB(y) glSugar::populateAttrib<decltype(y), offsetof(VertexFormat, y)>(vao, bindingIndex, attribIndex);  glVertexAttribDivisor(	attribIndex,1);
+
 #define VAO_INIT(x) using VertexFormat = x; static void initVAO(gl::VertexArray & vao, int bindingIndex, int& attribIndex)
 
 template <typename T, typename ...Args>
@@ -182,6 +209,13 @@ public:
     {
         int stride = sizeof(nth_element<BINDING_INDEX, types...>);
         vao.VertexBuffer(BINDING_INDEX, buffer, offset, stride);
+    }
+
+    template <int BINDING_INDEX = 0>
+    void vertexBufferInstanced(gl::Buffer& buffer, int offset = 0)
+    {
+        vertexBuffer(buffer, offset);
+        vao.BindingDivisor(BINDING_INDEX, 1);
     }
 
     void vertexBuffer(gl::Buffer& buffer, int vertexBufferBindingIndex, int stride, int offset = 0)

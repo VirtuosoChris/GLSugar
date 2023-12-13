@@ -15,4 +15,6 @@ target_include_directories(GLSugar PUBLIC ${STB_PATH})
 target_link_libraries(GLSugar ImGui)
 target_link_libraries(GLSugar glhpp)
 target_link_libraries(GLSugar glad)
+target_link_libraries(GLSugar stb_image)
+
 

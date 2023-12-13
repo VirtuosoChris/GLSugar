@@ -46,6 +46,8 @@ namespace glSugar
 
         TextureInputData &operator=(TextureInputData &&other);
 
+        void releaseData();
+
         ~TextureInputData();
     };
 
@@ -93,6 +95,8 @@ namespace glSugar
     /*** Include stb_image.h prior to this to enable these loaders ***/
 ///#ifdef STBI_INCLUDE_STB_IMAGE_H
     TextureInputData loadTextureDataFromFile(const std::string& filename);
+
+    TextureInputData loadTextureDataFromMemory(const unsigned char* mem, std::size_t bufferSize, bool isHDR = false);
 
     #if defined(__ANDROID_API__) && defined(USE_NATIVE_ACTIVITY)
     TextureInputData loadTextureDataFromAsset(const std::string& path,  android_app* app);
@@ -261,13 +265,18 @@ namespace glSugar
         //assert(GL_NO_ERROR == glGetError());
     }
 
-    TextureInputData::~TextureInputData()
+    void TextureInputData::releaseData()
     {
-        if (pixels)
+        if (pixels && deleter)
         {
             deleter(pixels);
             pixels = NULL;
         }
+    }
+
+    TextureInputData::~TextureInputData()
+    {
+        releaseData();
     }
 
     TextureInputData::TextureInputData(TextureInputData&& other)
@@ -338,11 +347,58 @@ namespace glSugar
     }
 
     #ifdef STBI_INCLUDE_STB_IMAGE_H
+
+    TextureInputData loadTextureDataFromMemory(const unsigned char* mem, std::size_t bufferSize, bool isHDR)
+    {
+        assert(mem != nullptr);
+
+        TextureInputData rval;
+
+        ///\todo this works based on the contents of the file.  this will not work with an android asset
+        if (isHDR)
+        {
+            rval.pixels = stbi_loadf_from_memory(mem, bufferSize, &rval.width, &rval.height, &rval.channels, 0);
+
+            if (!rval.pixels)
+            {
+                throw std::runtime_error(std::string("HDRImage load from memory error: \nFile ") + "\nReason:" + stbi_failure_reason());
+            }
+
+            rval.type = GL_FLOAT;
+        }
+        else
+        {
+            rval.pixels = stbi_load_from_memory(mem, bufferSize, &rval.width, &rval.height, &rval.channels, 0);
+
+            if (!rval.pixels)
+            {
+                throw std::runtime_error(std::string("LDRImage load from memory error: \nFile ") + "\nReason:" + stbi_failure_reason());
+            }
+
+            rval.type = GL_UNSIGNED_BYTE;
+        }
+
+#if defined(GL_LUMINANCE) && defined(GL_LUMINANCE_ALPHA)
+        GLenum formatFromChannels[] = { GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA };
+#else
+        GLenum formatFromChannels[] = { GL_RED, GL_RG, GL_RGB, GL_RGBA };
+#endif
+
+        rval.format = formatFromChannels[rval.channels - 1];
+        rval.deleter = stbi_image_free;
+        rval.unpackAlignment = 1;
+
+        std::clog << "\ttexture dimensions : " << rval.width << " " << rval.height << std::endl;
+
+        return rval;
+    }
+
+
     TextureInputData loadTextureDataFromFile(const std::string& filename)
     {
         TextureInputData rval;
 
-        std::clog << "Loading texture from file : " << filename << std::endl;
+        //std::clog << "Loading texture from file : " << filename << std::endl;
 
         ///\todo this works based on the contents of the file.  this will not work with an android asset
         if (stbi_is_hdr(filename.c_str()))

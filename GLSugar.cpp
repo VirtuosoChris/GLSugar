@@ -1,9 +1,9 @@
 #include <glad/gl.h>
 
-#if defined(STB_BUILD)
-#define STB_IMAGE_IMPLEMENTATION
+//#if defined(STB_BUILD)
+//#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-#endif
+//#endif
 
 #define VIRTUOSO_SHADERPROGRAMLIB_IMPLEMENTATION
 #include "GL_Objects/ShaderProgram.h"
