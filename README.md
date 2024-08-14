@@ -1,7 +1,10 @@
 # GLSugar : Modern OpenGL Helper Library
 
 ## Intro
-This repository is built using [GLHPP](https://github.com/Steve132/glhpp) (an object oriented / DSA-oriented modern GL interface) as a base.
+
+This is intended to be a collection of utility code to make programming in MODERN OpenGL easier, more readable, and more efficient.  I think of it as my ongoing effort to make a modern GLU for OpenGL 4.5 with AZDO / DSA style programming.
+
+This repository is built using [GLHPP](https://github.com/Steve132/glhpp) (an object oriented / RAII / DSA-oriented modern GL interface) as a base.
 
 Other external depends include [GLAD](https://glad.dav1d.de/) for extension wrangling, and [GLFWPP](https://github.com/Steve132/glfwpp) for windowing, which is based on [GLFW](https://github.com/glfw/glfw).
 
