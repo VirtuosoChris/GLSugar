@@ -18,10 +18,100 @@ struct GPUDeque
     PageIndex cursor = { 0u,0u }; // one past the end
     PageIndex begin = { 0u,0u };
 
+    std::size_t startForPage(const std::size_t& p) const
+    {
+        return (p == begin.first) ? begin.second : 0u;
+    }
+
+    std::size_t countForPage(const std::size_t& p) const
+    {
+        std::size_t rval = (p == cursor.first) ? cursor.second : CountPerPage;
+        rval -= startForPage(p);
+        return rval;
+    }
+
+    struct ContiguousRange
+    {
+        std::size_t start;
+        std::size_t count;
+        gl::Buffer& buffer;
+
+        ContiguousRange(std::size_t s, std::size_t c, gl::Buffer& b)
+            : start(s), count(c), buffer(b)
+        {
+        }
+    };
+
+
+    template <typename T, bool MappedInterface>
     struct ContiguousRangeIterator
     {
+        GPUDeque& parent;
 
+        std::size_t currentPage = 0;
+
+        ContiguousRange operator*()
+        {
+            return ContiguousRange(startIndex(), count(), buffer());
+        }
+
+        ContiguousRangeIterator begin()
+        {
+            return ContiguousRangeIterator(parent);
+        }
+
+        ContiguousRangeIterator end()
+        {
+            ContiguousRangeIterator rval(parent);
+            rval.currentPage = (parent.cursor.second == 0) ? parent.cursor.first : parent.cursor.first + 1;
+            return rval;
+        }
+
+        ContiguousRangeIterator(GPUDeque& p) :parent(p)
+        {
+            currentPage = parent.begin.first;
+        }
+
+        gl::Buffer& buffer()
+        {
+            return parent.pageVector[currentPage].buffer;
+        }
+
+        std::size_t count() const
+        {
+            return parent.countForPage(currentPage);
+        }
+
+        std::size_t startIndex() const
+        {
+            return parent.startForPage(currentPage);
+        }
+
+        operator bool() const
+        {
+            return (currentPage < parent.pageVector.size()) && parent.countForPage(currentPage);
+        }
+
+        ContiguousRangeIterator& operator++()
+        {
+            currentPage++;
+            return *this;
+        }
+
+        ContiguousRangeIterator operator++(int)
+        {
+            auto old = *this;
+            currentPage++;
+            return old;
+        }
     };
+
+    using RangeIterator = ContiguousRangeIterator<T, MappedInterface>;
+
+    RangeIterator ranges()
+    {
+        return RangeIterator(*this);
+    }
 
 #if 0
     /// Flush client writes on any dirty pages.  They will be seen by the server eventually
