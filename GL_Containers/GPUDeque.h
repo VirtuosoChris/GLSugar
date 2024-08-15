@@ -15,21 +15,6 @@ struct GPUDeque
 
     using PageIndex = std::pair<std::size_t, std::size_t>;
 
-    PageIndex cursor = { 0u,0u }; // one past the end
-    PageIndex begin = { 0u,0u };
-
-    std::size_t startForPage(const std::size_t& p) const
-    {
-        return (p == begin.first) ? begin.second : 0u;
-    }
-
-    std::size_t countForPage(const std::size_t& p) const
-    {
-        std::size_t rval = (p == cursor.first) ? cursor.second : CountPerPage;
-        rval -= startForPage(p);
-        return rval;
-    }
-
     struct ContiguousRange
     {
         std::size_t start;
@@ -108,9 +93,34 @@ struct GPUDeque
 
     using RangeIterator = ContiguousRangeIterator<T, MappedInterface>;
 
+    PageIndex end()
+    {
+        return { pageVector.size(),0u };
+    }
+
     RangeIterator ranges()
     {
         return RangeIterator(*this);
+    }
+
+    std::size_t Size() const
+    {
+        return cursor - begin;
+    }
+
+    std::size_t SizeBytes() const
+    {
+        return Size() * sizeof(T);
+    }
+
+    std::size_t Capacity() const
+    {
+        return CountPerPage * pageVector.size();
+    }
+
+    std::size_t CapacityBytes() const
+    {
+        return PageSizeBytes * pageVector.size();
     }
 
 #if 0
@@ -152,31 +162,6 @@ struct GPUDeque
             p.mappedPtr = nullptr;
             p.buffer.Unmap();
         }
-    }
-
-    std::size_t Size() const
-    {
-        return cursor - begin;
-    }
-
-    std::size_t SizeBytes() const
-    {
-        return Size() * sizeof(T);
-    }
-
-    std::size_t Capacity() const
-    {
-        return CountPerPage * pageVector.size();
-    }
-
-    std::size_t CapacityBytes() const
-    {
-        return PageSizeBytes * pageVector.size();
-    }
-
-    PageIndex end()
-    {
-        return { pageVector.size(),0u };
     }
 
     GPUDeque(GLenum usageIn = defaultUsage()) : usage(usageIn)
@@ -305,6 +290,21 @@ private:
 
     GLenum mapFlags = 0; // valid state is for these to be zero whenever the deque is not mapped
     bool mapped = false;
+
+    PageIndex cursor = { 0u,0u }; // one past the end
+    PageIndex begin = { 0u,0u };
+
+    std::size_t startForPage(const std::size_t& p) const
+    {
+        return (p == begin.first) ? begin.second : 0u;
+    }
+
+    std::size_t countForPage(const std::size_t& p) const
+    {
+        std::size_t rval = (p == cursor.first) ? cursor.second : CountPerPage;
+        rval -= startForPage(p);
+        return rval;
+    }
 
     static inline GLenum defaultUsage()
     {
