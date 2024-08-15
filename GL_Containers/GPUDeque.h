@@ -1,6 +1,6 @@
 #pragma once
 
-template<typename T, bool MappedInterface = false, std::size_t MinPageSize = 0xffff>
+template<typename T, bool MappedInterface = false, std::size_t MinPageSize = 0x10000>
 struct GPUDeque
 {
     constexpr static std::size_t PageSizeBytes = std::max<std::size_t>(MinPageSize, sizeof(T));
@@ -17,6 +17,26 @@ struct GPUDeque
 
     PageIndex cursor = { 0u,0u }; // one past the end
     PageIndex begin = { 0u,0u };
+
+    struct ContiguousRangeIterator
+    {
+
+    };
+
+#if 0
+    /// Flush client writes on any dirty pages.  They will be seen by the server eventually
+    template<typename = std::enable_if_t<MappedInterface>>
+    void flushWrites()
+    {
+        for (Page& p : pageVector)
+        {
+            if (p.dirtyBit)
+            {
+                p.flush();
+            }
+        }
+    }
+#endif
 
     template<typename = std::enable_if_t<MappedInterface>>
     void map(GLenum flags)
@@ -73,6 +93,22 @@ struct GPUDeque
     {
         pageVector.push_back(allocatePage());
         clear();
+    }
+
+    void reserve(std::size_t elements)
+    {
+        std::size_t cap = Capacity();
+
+        if (elements < cap) return;
+
+        std::size_t needed = elements - cap;
+
+        std::size_t addPages = needed / CountPerPage + (needed % CountPerPage != 0);
+
+        for (int i = 0; i < addPages; i++)
+        {
+            pageVector.push_back(allocatePage());
+        }
     }
 
     void push_front(const T& t)
@@ -194,7 +230,7 @@ private:
 
         PageType(GLenum usage, GLenum x)
         {
-            buffer.Data(PageSizeBytes, nullptr, usage);
+            buffer.Storage(PageSizeBytes, nullptr, usage);
         }
     };
 
@@ -204,6 +240,10 @@ private:
         gl::Buffer buffer;
         T* mappedPtr = nullptr;
         bool dirtyBit = false;
+
+#if _DEBUG
+        std::size_t bytesWritten = 0;
+#endif
 
         const T& operator[](const std::size_t idx) const
         {
@@ -215,12 +255,17 @@ private:
         {
             assert(mappedPtr != nullptr);
             dirtyBit = true;
+
+#if _DEBUG
+            bytesWritten += sizeof(T);
+#endif
+
             return *mappedPtr[idx];
         }
 
         PageType(GLenum usage, GLenum mapFlags = 0)
         {
-            buffer.Data(PageSizeBytes, nullptr, usage);
+            buffer.Storage(PageSizeBytes, nullptr, usage);
 
             if (mapFlags != 0)
             {
@@ -234,6 +279,9 @@ private:
             mappedPtr = (T*)buffer.MapRange(0, PageSizeBytes, mapFlags);
             assert(mappedPtr != nullptr);
             dirtyBit = false;
+#if _DEBUG
+            bytesWritten = 0;
+#endif
         }
 
         void unmap()
@@ -242,7 +290,17 @@ private:
             mappedPtr = nullptr;
             buffer.Unmap();
             dirtyBit = false;
+#if _DEBUG
+            bytesWritten = 0;
+#endif
         }
+
+#if 0
+        void flush()
+        {
+            buffer.FlushMappedRange(0, PageSizeBytes);
+        }
+#endif
     };
 
 
