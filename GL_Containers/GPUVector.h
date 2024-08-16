@@ -21,6 +21,24 @@ struct GPUVector
         buffer.Storage(capacity * sizeof(T), nullptr, usage);
     }
 
+    /// - remove element at index, swapping with last element to keep data tightly packed
+    /// - side effect : order of the elements is changed
+    void removeSwapBack(const std::size_t index)
+    {
+        assert(size > 0);
+        assert(index < size);
+
+        std::size_t last = size - 1;
+
+        if (index != last)
+        {
+            // -- small buffer-buffer copy on gpu / server
+            buffer.CopySubData(buffer, last * sizeof(T), index * sizeof(T), sizeof(T));
+        }
+
+        size -= 1;
+    }
+
     void clear()
     {
         size = 0;
@@ -60,21 +78,21 @@ struct GPUVector
     }
 
     template<typename = std::enable_if_t<MappedInterface == true>>
-    const T& operator[] (const std::size_t i) const
+    const T& operator[] (const std::size_t& i) const
     {
         assert(_impl.mappedPtr != nullptr);
         return _impl.mappedPtr[i];
     }
 
     template<typename = std::enable_if_t<MappedInterface == true>>
-    T& operator[] (const std::size_t i)
+    T& operator[] (const std::size_t& i)
     {
         assert(_impl.mappedPtr != nullptr);
         return _impl.mappedPtr[i];
     }
 
     template<typename = std::enable_if_t<MappedInterface == false>>
-    T operator[] (const std::size_t i) const
+    T operator[] (const std::size_t& i) const
     {
         assert(i < size);
 
@@ -83,11 +101,19 @@ struct GPUVector
         return rval;
     }
 
-    template<typename = std::enable_if_t<MappedInterface == false>>
+    //template<typename = std::enable_if_t<MappedInterface == false>>
     void write(const T& value, const std::size_t& i)
     {
         assert(i < size);
-        buffer.SubData(i * sizeof(T), sizeof(T), &value);
+
+        if (MappedInterface)
+        {
+            _impl.ptr()[i] = value;
+        }
+        else
+        {
+            buffer.SubData(i * sizeof(T), sizeof(T), &value);
+        }
     }
 
     template<typename = std::enable_if_t<MappedInterface>>
