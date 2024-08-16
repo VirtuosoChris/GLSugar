@@ -286,6 +286,33 @@ struct GPUDeque
         setData(value, c);
     }
 
+    /// - remove element at index, swapping with last element to keep data tightly packed
+    /// - side effect : order of the elements is changed
+    void removeSwapBack(const std::size_t index)
+    {
+        assert(Size() > 0);
+        assert(index < Size());
+
+        PageIndex last = cursor - 1;
+
+        PageIndex removeIndex = begin + index;
+
+        if (removeIndex != last)
+        {
+            // since we're a deque the src and dst might be in a different memory page
+            gl::Buffer& fromBuffer = pageVector[last.first].buffer;
+            gl::Buffer& toBuffer = pageVector[removeIndex.first].buffer;
+
+            // -- small buffer-buffer copy on gpu / server
+            fromBuffer.CopySubData(toBuffer,
+                last.second * sizeof(T),        // read last element
+                removeIndex.second * sizeof(T), // write last element data TO remove index
+                sizeof(T));
+        }
+
+        cursor--;
+    }
+
 private:
 
     GLenum mapFlags = 0; // valid state is for these to be zero whenever the deque is not mapped
