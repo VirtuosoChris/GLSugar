@@ -1,7 +1,3 @@
-bool rayTriangleIntersectionValid(vec4 albegat);
-bool rayTriangleIntersectionValidMaxT(vec4 albegat, float maxT);
-vec4 rayTriangleIntersection(vec3 rayOrigin, vec3 rayDirectionNorm, vec3 vertex0, vec3 vertex1, vec3 vertex2);
-
 // returns packed barycentric coords, t of intersection as vec4
 vec4 rayPlaneIntersection(vec3 rayOrigin, vec3 rayDirectionNorm, vec3 vertex0, vec3 vertex1, vec3 vertex2)
 {
