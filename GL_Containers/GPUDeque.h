@@ -3,6 +3,8 @@
 template<typename T, bool MappedInterface = false, std::size_t MinPageSize = 0x10000>
 struct GPUDeque
 {
+    using value_type = T;
+
     constexpr static std::size_t PageSizeBytes = std::max<std::size_t>(MinPageSize, sizeof(T));
     constexpr static std::size_t CountPerPage = PageSizeBytes / sizeof(T);
 
@@ -284,6 +286,11 @@ struct GPUDeque
         PageIndex c = begin + i;
 
         setData(value, c);
+    }
+
+    void removeUnordered(const std::size_t index)
+    {
+        removeSwapBack(index);
     }
 
     /// - remove element at index, swapping with last element to keep data tightly packed

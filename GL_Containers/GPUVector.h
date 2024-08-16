@@ -4,9 +4,8 @@ template <typename T, bool MappedInterface = false>
 struct GPUVector
 {
     gl::Buffer buffer;
-    std::size_t capacity = 0;
-    std::size_t size = 0;
-    const GLenum usage;
+
+    using value_type = T;
 
     const static inline std::size_t DefaultCapacity = 64u;
 
@@ -19,6 +18,11 @@ struct GPUVector
         usage(usageIn)
     {
         buffer.Storage(capacity * sizeof(T), nullptr, usage);
+    }
+
+    void removeUnordered(const std::size_t index)
+    {
+        removeSwapBack(index);
     }
 
     /// - remove element at index, swapping with last element to keep data tightly packed
@@ -134,7 +138,31 @@ struct GPUVector
         _impl.mapFlags = 0;
     }
 
+    std::size_t Size() const
+    {
+        return size;
+    }
+
+    std::size_t SizeBytes() const
+    {
+        return size * sizeof(T);
+    }
+
+    std::size_t Capacity() const
+    {
+        return capacity;
+    }
+
+    std::size_t CapacityBytes() const
+    {
+        return capacity * sizeof(T);
+    }
+
 private:
+
+    std::size_t capacity = 0;
+    std::size_t size = 0;
+    const GLenum usage;
 
     template<typename = std::enable_if_t<MappedInterface>>
     bool remap()
