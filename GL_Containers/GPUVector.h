@@ -190,6 +190,9 @@ private:
         buffer.CopySubData(b, 0u, 0u, size * sizeof(T));
         buffer = std::move(b);
 
+#if _DEBUG
+        //std::clog << "Reallocated bytes :" << SizeBytes() << std::endl;
+#endif
         remap();
     }
 
