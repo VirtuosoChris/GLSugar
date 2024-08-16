@@ -24,4 +24,6 @@ GL_VAO - For automatically setting up VAO (Vertex Array Object) state from struc
 
 GL_Objects - Additional helpers for setting up, initializing and using textures and shaders
 
+Shaders - raw shader source files for common library functions you might need in your shader programs.
+
 IMGUI Renderer - rendering header backend for Dear IMGUI library using GLHPP / GLSugar.
