@@ -10,10 +10,9 @@ struct GPUVector
     const static inline std::size_t DefaultCapacity = 64u;
 
     constexpr static GLenum NonMappedCreationFlagsDefault = GL_DYNAMIC_STORAGE_BIT;
-    constexpr static GLenum PersistentMapCreationDefaultFlags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_DYNAMIC_STORAGE_BIT;
     constexpr static GLenum PersistentMappingDefaultFlags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
 
-    GPUVector(std::size_t capacityIn = DefaultCapacity, GLenum usageIn = MappedInterface ? PersistentMapCreationDefaultFlags : NonMappedCreationFlagsDefault) :
+    GPUVector(std::size_t capacityIn = DefaultCapacity, GLenum usageIn = MappedInterface ? PersistentMappingDefaultFlags : NonMappedCreationFlagsDefault) :
         capacity(capacityIn),
         usage(usageIn)
     {
@@ -124,7 +123,9 @@ struct GPUVector
     void map(GLenum flags = PersistentMappingDefaultFlags)
     {
         assert(_impl.mappedPtr == nullptr);
-        _impl.mappedPtr = (T*)buffer.Map(flags);
+
+        _impl.mappedPtr = (T*)buffer.MapRange(0, CapacityBytes(), flags);
+
         assert(_impl.mappedPtr != nullptr);
         _impl.mapFlags = flags;
     }
@@ -169,9 +170,12 @@ private:
     {
         if (_impl.mapFlags)
         {
+            _impl.mappedPtr = nullptr;
             map(_impl.mapFlags);
             return _impl.mappedPtr != nullptr;
         }
+
+        return false;
     }
 
     template<typename = std::enable_if_t<MappedInterface == false>>
@@ -208,5 +212,4 @@ private:
 
     Impl _impl;
 };
-
 

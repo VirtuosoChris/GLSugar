@@ -8,8 +8,6 @@ struct GPUDeque
     constexpr static std::size_t PageSizeBytes = std::max<std::size_t>(MinPageSize, sizeof(T));
     constexpr static std::size_t CountPerPage = PageSizeBytes / sizeof(T);
 
-    constexpr static GLenum PersistentMapCreationDefaultFlags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT;
-
     // use coherent map bit by default so the user doesn't have to think about explicit sync.  This may be slower!
     constexpr static GLenum PersistentMappingDefaultFlags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
 
@@ -344,7 +342,7 @@ private:
     {
        if (!MappedInterface) return GL_DYNAMIC_STORAGE_BIT; // -- needed for subData calls to change the data
 
-       return GL_MAP_READ_BIT | GL_MAP_WRITE_BIT;
+       return PersistentMappingDefaultFlags;
     }
 
     template<typename T, bool MappedInterface>
