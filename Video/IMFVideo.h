@@ -4,6 +4,33 @@
 /// Works but needs to be polished up.  No cross platform equivalent is available right now
 /// Sample usage : https://github.com/VirtuosoChris/IMFVideoTests/blob/main/006%20Header%20Lib/Tutorial01.cpp
 
+/*
+
+Initialization:
+Virtuoso::Win32::IMFMediaPlayer player;
+player.playMedia("./video.mp4");
+
+Sample Update / Display:
+if (virtuosoPlayer.updateStep())
+{
+    virtuosoPlayer.glState.lockForGL();
+
+        // blit the video player's gl fbo to the main fbo 0
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, virtuosoPlayer.glState.readFBO);
+
+        glBlitFramebuffer(//readFB, targetFB,
+            0, 0, 800, 600,
+            0, 600, 800, 0,
+            GL_COLOR_BUFFER_BIT,
+            GL_LINEAR
+        );
+
+    virtuosoPlayer.glState.unlockForGL();
+}
+
+*/
+
 #include <string_view>
 #include <vector>
 #include <sstream>
