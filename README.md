@@ -26,4 +26,6 @@ GL_Objects - Additional helpers for setting up, initializing and using textures 
 
 Shaders - raw shader source files for common library functions you might need in your shader programs.
 
+Algorithms - client side code for common graphics algorithms you might want.
+
 IMGUI Renderer - rendering header backend for Dear IMGUI library using GLHPP / GLSugar.
