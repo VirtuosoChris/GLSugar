@@ -29,3 +29,5 @@ Shaders - raw shader source files for common library functions you might need in
 Algorithms - client side code for common graphics algorithms you might want.
 
 IMGUI Renderer - rendering header backend for Dear IMGUI library using GLHPP / GLSugar.
+
+Video - Hardware accelerated video playback to texture : currently Win32 / IMF only.
