@@ -37,6 +37,17 @@ namespace glSugar
             using ArrayType::ArrayType;
             using ArrayType::operator=;
 
+            inline T dot(const AttribVec < T, length, Normalized>& other) const
+            {
+                float accum = 0.f;
+                for (int i = 0; i < length; i++)
+                {
+                    accum += this->at(i) * other[i];
+                }
+
+                return accum;
+            }
+
             //AttribVec() {}
 
             //template <typename B>
